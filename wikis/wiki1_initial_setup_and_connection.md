@@ -28,6 +28,58 @@ Establish connection to HTB network and prepare for the lab
 - Verifying successful VPN connection
 - Understanding tunnel interface creation
 
+#### VPN Setup for Different Operating Systems
+
+##### Windows Setup
+1. **Using WSL (Windows Subsystem for Linux) with Kali**
+   - Install WSL from Microsoft Store or using PowerShell: `wsl --install`
+   - Install Kali Linux from Microsoft Store
+   - Launch Kali and update: `sudo apt update && sudo apt upgrade`
+   - Install OpenVPN: `sudo apt install openvpn`
+   - Download the HTB .ovpn file to your Downloads folder
+   - Access it from WSL: `cd /mnt/c/Users/YourUsername/Downloads`
+   - Connect using: `sudo openvpn filename.ovpn`
+
+2. **Using Windows Native**
+   - Download and install OpenVPN client from [openvpn.net](https://openvpn.net/community-downloads/)
+   - Download the HTB .ovpn file
+   - Right-click the OpenVPN GUI icon and select "Run as administrator"
+   - Right-click the OpenVPN icon in system tray and select "Import file"
+   - Browse to your .ovpn file and import it
+   - Right-click the icon again and select "Connect"
+
+##### macOS Setup
+1. **Without VM**
+   - Install Homebrew if not installed: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
+   - Install OpenVPN: `brew install openvpn`
+   - Add OpenVPN to your PATH: `export PATH=$(brew --prefix openvpn)/sbin:$PATH`
+   - Navigate to your .ovpn file location: `cd ~/Downloads`
+   - Connect using: `sudo openvpn filename.ovpn`
+
+2. **With VM (UTM/Parallels/VirtualBox)**
+   - Install VM software of your choice
+   - Download and install Kali Linux VM
+   - Start the VM and update: `sudo apt update && sudo apt upgrade`
+   - Transfer the .ovpn file to your VM
+   - Connect using: `sudo openvpn filename.ovpn`
+
+##### Ubuntu Setup
+1. **Native Ubuntu**
+   - Open Terminal
+   - Install OpenVPN: `sudo apt install openvpn`
+   - Navigate to your .ovpn file: `cd ~/Downloads`
+   - Connect using: `sudo openvpn filename.ovpn`
+
+#### Recommended Approach for Beginners
+
+For beginners, we recommend using **Pwnbox** (Method A) as it requires no setup. If you prefer using your own system:
+
+- **Windows users**: Start with WSL + Kali as it's easier to set up than a full VM
+- **macOS users**: Use the native approach with Homebrew
+- **Linux users**: Use the native Ubuntu approach
+
+These methods provide the best balance of simplicity and functionality for those new to penetration testing.
+
 ### Target Machine Setup
 - Spawning the Meow machine
 - Obtaining target IP address
