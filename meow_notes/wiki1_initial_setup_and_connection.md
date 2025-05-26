@@ -85,6 +85,17 @@ These methods provide the best balance of simplicity and functionality for those
 - Obtaining target IP address
 - Understanding lab environment
 
+#### Connecting with Kali WSL in Windows
+1. Start your Kali WSL instance from Windows terminal: `wsl -d kali-linux`
+2. Install OpenVPN if not already installed: `sudo apt install openvpn`
+3. Download the HTB .ovpn file from the HTB website to your Windows Downloads folder
+4. Access the file from WSL: `cd /mnt/c/Users/YourUsername/Downloads`
+5. Connect using: `sudo openvpn your-htb-file.ovpn`
+6. Wait for "Initialization Sequence Completed" message
+7. Open a new WSL terminal window to keep the VPN connection running
+8. Verify connection by pinging the Meow machine: `ping <target_IP>`
+9. Connect to the Meow machine via Telnet: `telnet <target_IP> 23`
+
 ## Prerequisites
 - Basic understanding of Linux terminal
 - Virtual machine software (if using Method B)
