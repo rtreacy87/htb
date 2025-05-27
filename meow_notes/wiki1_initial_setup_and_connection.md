@@ -96,6 +96,7 @@ These methods provide the best balance of simplicity and functionality for those
 8. Verify connection by pinging the Meow machine: `ping <target_IP>`
 9. Connect to the Meow machine via Telnet: `telnet <target_IP> 23`
 
+
 ## Prerequisites
 - Basic understanding of Linux terminal
 - Virtual machine software (if using Method B)

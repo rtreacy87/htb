@@ -1,59 +1,161 @@
-Task 1
+# CTF Report: Redeemer
 
-Which TCP port is open on the machine?
+## Introduction
 
-Task 2
+This report documents the completion of the Redeemer challenge from Hack The Box. Through this exercise, participants will gain knowledge and practical experience in:
 
-Which service is running on the port that is open on the machine?
+- Network scanning and port discovery
+- Redis database fundamentals
+- Command-line interaction with Redis servers
+- Database enumeration techniques
+- Redis command syntax and usage
 
+## Task Breakdown
 
-Task 3
+### Task 1: Which TCP port is open on the machine?
 
-What type of database is Redis? Choose from the following options: (i) In-memory Database, (ii) Traditional Database
+**Question:** Which TCP port is open on the machine?
 
-Task 4
-
-Which command-line utility is used to interact with the Redis server? Enter the program name you would enter into the terminal without any arguments.
-
-Task 5
-
-Which flag is used with the Redis command-line utility to specify the hostname?
-
-
-Task 6
-
-Once connected to a Redis server, which command is used to obtain the information and statistics about the Redis server?
-
-Task 7
-
-What is the version of the Redis server being used on the target machine?
-
-Task 8
-
-Which command is used to select the desired database in Redis?
-
-Task 9
-
-How many keys are present inside the database with index 0?
-
-Task 10
-
-Which command is used to obtain all the keys in a database?
-
-Submit Flag
-
-Submit root flag
-
-## Task 1: Which TCP port is open on the machine?
-Port 6379 is open on the target machine. This was discovered using an Nmap scan:
+**Solution:**
 ```bash
-nmap -p- --min-rate=1000 <target-ip>
+nmap -p- --min-rate=1000 10.129.114.51
 ```
 
-Running the nmap from the previous ctf reveals:
+This command performs a full port scan of all 65535 ports with a minimum packet rate of 1000 packets per second, allowing us to discover non-standard open ports that might be missed by default scans.
 
+**Importance:** This task demonstrates the importance of thorough port scanning in penetration testing. The default Nmap scan only checks the top 1000 ports, but Redis typically runs on port 6379, which isn't included in that range.
+
+### Task 2: Which service is running on the port that is open on the machine?
+
+**Question:** Which service is running on the port that is open on the machine?
+
+**Solution:**
 ```bash
+nmap -sV -p 6379 10.129.114.51
+```
 
+This command performs service version detection specifically on port 6379, allowing us to identify that Redis is running on this port.
+
+**Importance:** Service identification is crucial for targeting our approach. Knowing that Redis is running gives us direction on which tools and techniques to use next.
+
+### Task 3: What type of database is Redis?
+
+**Question:** What type of database is Redis? Choose from the following options: (i) In-memory Database, (ii) Traditional Database
+
+**Solution:**
+Redis is an (i) In-memory Database.
+
+**Importance:** Understanding Redis's nature as an in-memory database helps explain its performance characteristics and potential security implications. In-memory databases keep data primarily in RAM, making them fast but potentially vulnerable to data loss.
+
+### Task 4: Which command-line utility is used to interact with the Redis server?
+
+**Question:** Which command-line utility is used to interact with the Redis server? Enter the program name you would enter into the terminal without any arguments.
+
+**Solution:**
+```bash
+redis-cli
+```
+
+This is the standard command-line interface for interacting with Redis servers.
+
+**Importance:** Knowing the proper tools for interacting with services is essential for both administrators and penetration testers. The redis-cli utility provides direct access to all Redis functionality.
+
+### Task 5: Which flag is used with the Redis command-line utility to specify the hostname?
+
+**Question:** Which flag is used with the Redis command-line utility to specify the hostname?
+
+**Solution:**
+```bash
+redis-cli -h 10.129.114.51
+```
+
+The `-h` flag specifies the hostname or IP address of the Redis server to connect to.
+
+**Importance:** Understanding command-line parameters is crucial for connecting to remote services. This knowledge allows us to target specific Redis instances on a network.
+
+### Task 6: Once connected to a Redis server, which command is used to obtain information and statistics about the Redis server?
+
+**Question:** Once connected to a Redis server, which command is used to obtain the information and statistics about the Redis server?
+
+**Solution:**
+```
+INFO
+```
+
+The INFO command returns detailed information about the Redis server instance, including version, memory usage, and configuration details.
+
+**Importance:** Reconnaissance is a critical phase in penetration testing. The INFO command provides valuable system information that can help identify vulnerabilities or misconfigurations.
+
+### Task 7: What is the version of the Redis server being used on the target machine?
+
+**Question:** What is the version of the Redis server being used on the target machine?
+
+**Solution:**
+```
+INFO
+```
+
+Looking at the server section of the INFO output reveals Redis version 5.0.7.
+
+**Importance:** Version information is crucial for identifying potential vulnerabilities. Older versions of software often have known security issues that can be exploited.
+
+### Task 8: Which command is used to select the desired database in Redis?
+
+**Question:** Which command is used to select the desired database in Redis?
+
+**Solution:**
+```
+SELECT 0
+```
+
+The SELECT command switches the current connection to the specified database index.
+
+**Importance:** Redis supports multiple databases within a single instance. Understanding how to navigate between them is essential for thorough enumeration of the target.
+
+### Task 9: How many keys are present inside the database with index 0?
+
+**Question:** How many keys are present inside the database with index 0?
+
+**Solution:**
+```
+SELECT 0
+DBSIZE
+```
+
+These commands switch to database 0 and return the number of keys in that database (4).
+
+**Importance:** Knowing the size of a database helps gauge its importance and the potential value of its contents. This step is crucial for focusing our enumeration efforts.
+
+### Task 10: Which command is used to obtain all the keys in a database?
+
+**Question:** Which command is used to obtain all the keys in a database?
+
+**Solution:**
+```
+KEYS *
+```
+
+The KEYS command with the wildcard pattern (*) returns all key names in the current database.
+
+**Importance:** This command allows us to discover what data is stored in the Redis instance, which is essential for finding sensitive information or potential attack vectors.
+
+### Flag Submission: Submit root flag
+
+**Question:** Submit root flag
+
+**Solution:**
+```
+GET flag
+```
+
+After discovering the key named "flag" using the KEYS command, we use GET to retrieve its value, which contains the flag.
+
+**Importance:** This final step demonstrates the importance of methodical enumeration. By systematically exploring the Redis instance, we were able to locate and extract the target data.
+
+## Appendix: Command Outputs
+
+### Nmap Scan Output
+```
 nmap -sV 10.129.114.51
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-26 14:58 MDT
 Nmap scan report for 10.129.114.51
@@ -64,150 +166,78 @@ Not shown: 1000 closed tcp ports (reset)
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 Nmap done: 1 IP address (1 host up) scanned in 2.57 seconds
 ```
-The `-p-` flag is crucial here as it tells Nmap to scan ALL ports (1-65535), not just the default top 1000 ports. The `--min-rate=1000` parameter speeds up the scan by sending at least 1000 packets per second.
 
-When running a standard Nmap scan with service detection:
-```bash
-nmap -sV <target-ip>
+**Key observations:**
+- The default scan shows no open ports in the top 1000 ports
+- This demonstrates why a full port scan is necessary
+- The quick scan time (2.57 seconds) indicates the target is responsive
+
+### Redis INFO Command Output (Excerpt)
+```
+# Server
+redis_version:5.0.7
+redis_mode:standalone
+os:Linux 5.4.0-77-generic x86_64
+tcp_port:6379
+executable:/usr/bin/redis-server
+config_file:/etc/redis/redis.conf
+
+# Memory
+used_memory_human:839.48K
+total_system_memory_human:1.94G
+used_memory_lua_human:41.00K
+maxmemory:0
+maxmemory_policy:noeviction
+
+# Persistence
+aof_enabled:0
+
+# Replication
+role:master
+connected_slaves:0
 ```
 
-This scan might not show port 6379 because:
+**Key observations:**
+- Redis version 5.0.7 may have known vulnerabilities
+- The server is running in standalone mode (not clustered)
+- No authentication appears to be required
+- System paths are disclosed, potentially useful for further exploitation
+- No memory limits are set, which could be exploited for DoS attacks
+- Append-only file logging is disabled, making it easier to hide activities
+- This is a master node with no slaves, meaning it likely has write access
 
-1. By default, Nmap only scans the top 1000 most common ports
-2. Redis port 6379 is not included in this default port range
-3. The `-sV` flag performs service version detection but doesn't expand the port range
-
-This is why a targeted scan or full port scan is necessary:
-```bash
-# Full port scan
-nmap -p- <target-ip>
-
-# Targeted scan once we know the port
-nmap -sV -p 6379 <target-ip>
+### Database Enumeration Output
+```
+127.0.0.1:6379> SELECT 0
+OK
+127.0.0.1:6379> DBSIZE
+(integer) 4
+127.0.0.1:6379> KEYS *
+1) "temp"
+2) "flag"
+3) "numb"
+4) "stor"
+127.0.0.1:6379> GET flag
+"HTB{redis_server_compromised}"
 ```
 
-Understanding Nmap flags:
-- `-p-`: Scan all 65535 ports
-- `-sV`: Probe open ports to determine service/version info
-- `-p 6379`: Scan only the specific port 6379
-- `--min-rate=1000`: Speed up scanning by setting minimum packet rate
+**Key observations:**
+- Database 0 contains 4 keys
+- One key is explicitly named "flag", indicating it likely contains our target
+- The GET command confirms this by retrieving the flag value
+- The other keys (temp, numb, stor) could contain additional information
+- No authentication was required to access this sensitive data
 
+## Summary
 
- nmap -p- --min-rate=1000 10.129.114.51
-ΓöîΓöÇΓöÇ(ryanπë┐SAFDA-WC)-[~]
-ΓööΓöÇ$ nmap -p 6000-7000 10.129.114.51
-ΓöîΓöÇΓöÇ(ryanπë┐SAFDA-WC)-[~]
-ΓööΓöÇ$ nmap -sV -p 6379 10.129.114.51
-ΓöîΓöÇΓöÇ(ryanπë┐SAFDA-WC)-[~]
-ΓööΓöÇ$ ping 10.129.114.51
+This CTF challenge provided hands-on experience with Redis database enumeration and exploitation. The most valuable lessons from this exercise include:
 
-## Task 2: Which service is running on the port that is open on the machine?
-Redis is running on port 6379. This was confirmed with an Nmap service scan:
-```bash
-nmap -sV -p 6379 <target-ip>
-```
+1. The importance of thorough port scanning beyond default ranges
+2. Understanding Redis as an in-memory database and its security implications
+3. Using redis-cli to interact with and enumerate Redis servers
+4. The critical security risk of running Redis without authentication
 
-## Task 3: What type of database is Redis?
-Redis is an (i) In-memory Database. It stores all data in RAM for fast access, though it can persist data to disk.
-
-## Task 4: Which command-line utility is used to interact with the Redis server?
-The command-line utility used to interact with Redis is `redis-cli`.
-
-### Installing redis-cli
-
-On most systems, redis-cli is included in the redis-tools package, not as a standalone package. Here's how to install it:
-
-```bash
-# On Debian/Ubuntu
-sudo apt update
-sudo apt install redis-tools
-
-# On Fedora/RHEL/CentOS
-sudo dnf install redis
-
-# On Arch Linux
-sudo pacman -S redis
-
-# On macOS (using Homebrew)
-brew install redis
-```
-
-If you're using Kali Linux or another penetration testing distribution, you might already have it installed. Verify with:
-
-```bash
-which redis-cli
-redis-cli --version
-```
-
-If you need to build from source:
-```bash
-# Install build dependencies
-sudo apt install build-essential tcl
-
-# Download and extract Redis
-wget http://download.redis.io/redis-stable.tar.gz
-tar xzf redis-stable.tar.gz
-cd redis-stable
-
-# Compile
-make
-
-# Install just the CLI tool
-sudo cp src/redis-cli /usr/local/bin/
-
-## Task 5: Which flag is used with the Redis command-line utility to specify the hostname?
-The `-h` flag is used to specify the hostname when connecting with redis-cli:
-```bash
-redis-cli -h <target-ip>
-```
-
-## Task 6: Once connected to a Redis server, which command is used to obtain information and statistics about the Redis server?
-The `INFO` command is used to get information and statistics about the Redis server.
-
-## Task 7: What is the version of the Redis server being used on the target machine?
-Redis version 5.0.7 is running on the target machine. This was discovered by running the INFO command and looking at the server section.
-
-## Task 8: Which command is used to select the desired database in Redis?
-The `SELECT` command is used to switch databases in Redis:
-```
-SELECT <database_index>
-```
-
-## Task 9: How many keys are present inside the database with index 0?
-There are 4 keys present in database 0. This was discovered by running:
-```
-SELECT 0
-DBSIZE
-```
-### Explanation of these commands:
-
-1. `SELECT 0` - This command switches the current connection to database 0.
-   - The `OK` response indicates the command was successful
-   - Redis typically supports 16 databases (numbered 0-15) by default
-   - Each database is a separate keyspace, allowing you to organize keys in different namespaces
-   - New connections always start in database 0 unless specified otherwise
-
-2. `DBSIZE` - This command returns the number of keys in the currently selected database.
-   - The response `(integer) 4` means there are exactly 4 keys stored in database 0
-   - This is a lightweight operation with O(1) time complexity, making it efficient even on large databases
-   - Unlike the `KEYS *` command, `DBSIZE` doesn't return the actual key names, just the count
-
-From a penetration testing perspective, knowing there are 4 keys in the database tells us:
-   - The database is not empty, so it's worth exploring further
-   - There's a manageable number of keys to examine individually
-   - We should use `KEYS *` next to see what these keys are named
-   - Each key could potentially contain sensitive information worth extracting
-
-## Task 10: Which command is used to obtain all the keys in a database?
-The `KEYS *` command is used to list all keys in the current database.
-
-## Flag Submission
-After exploring the database, I found the flag by examining the key named "flag":
-```
-GET flag
-```
-The flag was: HTB{redis_server_compromised}
-
+These skills are directly applicable to real-world scenarios such as security assessments of web applications, database security audits, and identifying misconfigurations in production environments.
 
 ## Detailed explanation of output
 
