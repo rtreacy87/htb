@@ -166,13 +166,13 @@ First, let's create a file that lists all our needed libraries:
 Create a file called `requirements.txt` in your project folder:
 
 ```txt
-PyMuPDF==1.23.8
-pdfplumber==0.9.0
-pytesseract==0.3.10
-Pillow==10.0.1
-spacy==3.7.2
-click==8.1.7
-pytest==7.4.3
+PyMuPDF
+pdfplumber
+pytesseract
+Pillow
+spacy
+click
+pytest
 ```
 
 ### Install the Libraries
