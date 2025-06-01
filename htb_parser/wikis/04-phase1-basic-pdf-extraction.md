@@ -31,6 +31,38 @@ You can't just open a PDF like a text file because the text is stored in a compl
 
 Let's create our first component! In your `src` folder, create a file called `pdf_processor.py`:
 
+This is like a smart PDF reader that can extract text and 
+tell us information about the document.
+
+```
++------------------+     +------------------+     +------------------+
+|                  |     |                  |     |                  |
+|  load_pdf()      |---->|  extract_text    |---->|  close_document()|
+|  - Opens PDF     |     |  - From page     |     |  - Cleanup       |
+|  - Validates     |     |  - From all pages|     |  - Free memory   |
+|                  |     |                  |     |                  |
++------------------+     +------------------+     +------------------+
+          |                      ^
+          |                      |
+          v                      |
++------------------+             |
+|                  |             |
+| get_document_info|-------------+
+| - Metadata       |
+| - Page count     |
+|                  |
++------------------+
+```
+
+Workflow:
+1. Initialize PDFProcessor
+2. Load PDF with load_pdf()
+3. Get metadata with get_document_info()
+4. Extract text with extract_text_from_page() or extract_all_text()
+5. Close document with close_document()
+
+The `__init__` method is like the "setup" for our PDF reader. It prepares the reader to work with PDFs.
+
 ```python
 # src/pdf_processor.py
 import fitz  # PyMuPDF
@@ -49,7 +81,46 @@ class PDFProcessor:
         """Initialize the PDF processor."""
         self.current_document = None
         self.document_path = None
-    
+```
+The `load_pdf` method is like the "open" button in a PDF reader. It lets us choose which PDF we want to work with.
+
+Flow:
+```
++-----------------------+
+| load_pdf(pdf_path)    |
++-----------------------+
+         |
+         v
++-----------------------+
+| _convert_string_path  |
+| (Convert to Path obj) |
++-----------------------+
+         |
+         v
++-----------------------+     No      +----------------+
+| _check_if_file_exists |----------->| Return False   |
+| (File exists?)        |             +----------------+
++-----------------------+
+         | Yes
+         v
++-----------------------+
+| _load_pdf             |
+| (Open with PyMuPDF)   |
++-----------------------+
+         |
+         v
++-----------------------+     Error   +----------------+
+| Try/Except Block      |----------->| Print Error    |
+| (Catch any errors)    |             | Return False   |
++-----------------------+             +----------------+
+         | Success
+         v
++-----------------------+
+| Return True           |
++-----------------------+
+```
+
+```python
     def load_pdf(self, pdf_path: str) -> bool:
         """
         Load a PDF file for processing.
@@ -61,23 +132,70 @@ class PDFProcessor:
             True if successful, False if there was an error
         """
         try:
-            # Convert string path to Path object for better handling
-            self.document_path = Path(pdf_path)
-            
-            # Check if file exists
-            if not self.document_path.exists():
-                print(f"Error: File {pdf_path} not found!")
+            self._convert_string_path(pdf_path)
+            if self._check_if_file_exists():
+                self._load_pdf(pdf_path)
+                return True
+            else:
                 return False
-            
-            # Open the PDF document
-            self.current_document = fitz.open(pdf_path)
-            print(f"✅ Successfully loaded PDF: {self.document_path.name}")
-            print(f"   Pages: {len(self.current_document)}")
-            return True
-            
         except Exception as e:
             print(f"❌ Error loading PDF: {e}")
             return False
+
+    def _convert_string_path(self, pdf_path: str):
+        """Convert string path to Path object."""
+        if not pdf_path or pdf_path.strip() == "":
+            self.document_path = None
+            return
+        self.document_path = Path(pdf_path)
+
+    def _check_if_file_exists():
+        return self.document_path.exists():
+
+    def _load_pdf(self, pdf_path: str):
+        """Load the PDF document using PyMuPDF."""
+        self.current_document = fitz.open(self.document_path)
+        if not self.document_path or not self.document_path.name:
+            print("❌ Error: Invalid document path")
+            return
+        print(f"✅ Successfully loaded PDF: {self.document_path.name}")
+        print(f"   Pages: {len(self.current_document)}")
+```
+
+The `get_document_info` method is like the "properties" section in a PDF reader. It tells us things like the title, author, and number of pages.
+
+Flow:
+```
++-------------------------+
+| get_document_info()     |
++-------------------------+
+           |
+           v
++-------------------------+     No     +-------------------------+
+| Is document loaded?     |----------->| Return error dictionary |
+| (current_document?)     |            +-------------------------+
++-------------------------+
+           | Yes
+           v
++-------------------------+
+| Extract metadata from   |
+| current_document        |
++-------------------------+
+           |
+           v
++-------------------------+
+| Get file size from      |
+| document_path           |
++-------------------------+
+           |
+           v
++-------------------------+
+| Return dictionary with  |
+| all document info       |
++-------------------------+
+```
+
+```python   
     
     def get_document_info(self) -> Dict:
         """
@@ -100,7 +218,53 @@ class PDFProcessor:
             "pages": len(self.current_document),
             "file_size": self.document_path.stat().st_size if self.document_path else 0
         }
-    
+```
+
+The `extract_text_from_page` method is like the "copy" function in a PDF reader. It lets us copy the text from one page.
+
+Flow:
+```
++-----------------------------+
+| extract_text_from_page(page)|
++-----------------------------+
+           |
+           v
++-----------------------------+     No     +-----------------------------+
+| Is document loaded?         |----------->| Return error message       |
+| (current_document?)         |            +-----------------------------+
++-----------------------------+
+           | Yes
+           v
++-----------------------------+     No     +-----------------------------+
+| Is page number valid?       |----------->| Return error message       |
+| (page_number < pages?)      |            +-----------------------------+
++-----------------------------+
+           | Yes
+           v
++-----------------------------+
+| _get_page(page_number)      |
+| Get the page object         |
++-----------------------------+
+           |
+           v
++-----------------------------+
+| _extract_text_from_page(page)|
+| Extract text from page obj  |
++-----------------------------+
+           |
+           v
++-----------------------------+     Error   +-----------------------------+
+| Try/Except Block           |------------>| Return error message        |
+| (Catch any errors)         |             +-----------------------------+
++-----------------------------+
+           | Success
+           v
++-----------------------------+
+| Return extracted text       |
++-----------------------------+
+```
+
+```python
     def extract_text_from_page(self, page_number: int) -> str:
         """
         Extract text from a specific page.
@@ -118,17 +282,61 @@ class PDFProcessor:
             return f"Error: Page {page_number} doesn't exist"
         
         try:
-            # Get the page
-            page = self.current_document[page_number]
-            
-            # Extract text
-            text = page.get_text()
-            
+            page = self._get_page(page_number)
+            text = self._extract_text_from_page(page)
             return text
-            
         except Exception as e:
             return f"Error extracting text from page {page_number}: {e}"
     
+    def _get_page(self, page_number: int):
+        """Get the page object from the document."""
+        return self.current_document[page_number]
+    
+    def _extract_text_from_page(self, page):
+        """Extract text from a page object."""
+        return page.get_text()
+```  
+
+The `extract_all_text` method is like the "select all" and "copy" function in a PDF reader. It lets us copy all the text from the entire document.
+
+Flow:
+```
++-----------------------------+
+| extract_all_text()          |
++-----------------------------+
+           |
+           v
++-----------------------------+     No     +-----------------------------+
+| Is document loaded?         |----------->| Return error message       |
+| (current_document?)         |            +-----------------------------+
++-----------------------------+
+           | Yes
+           v
++-----------------------------+
+| Loop through all pages      |
+| (for page_num in range...)  |
++-----------------------------+
+           |
+           v
++-----------------------------+
+| Extract text from each page |
+| (Call extract_text_from_page)|
++-----------------------------+
+           |
+           v
++-----------------------------+
+| Add page separator and text |
+| to all_text list            |
++-----------------------------+
+           |
+           v
++-----------------------------+
+| Join all_text list into one |
+| string and return           |
++-----------------------------+
+```
+
+```python    
     def extract_all_text(self) -> str:
         """
         Extract text from all pages in the document.
@@ -142,16 +350,57 @@ class PDFProcessor:
         all_text = []
         
         for page_num in range(len(self.current_document)):
-            print(f"Processing page {page_num + 1}...")
+            self._report_progress(page_num)
             
             page_text = self.extract_text_from_page(page_num)
             
-            # Add page separator for clarity
-            all_text.append(f"\n--- Page {page_num + 1} ---\n")
+            # Add page separator and text
+            all_text.append(self._format_page_separator(page_num))
             all_text.append(page_text)
         
         return "\n".join(all_text)
-    
+
+    def _report_progress(self, page_num: int):
+        """Report progress during text extraction."""
+        print(f"Processing page {page_num + 1}...")
+
+    def _format_page_separator(self, page_num: int) -> str:
+        """Format the page separator for extracted text."""
+        return f"\n--- Page {page_num + 1} ---\n"    
+```
+
+The `close_document` method is like the "close" button in a PDF reader. It lets us close the document when we're done.
+
+Flow:
+```
++-----------------------------+
+| close_document()            |
++-----------------------------+
+           |
+           v
++-----------------------------+     No     +-----------------------------+
+| Is document loaded?         |----------->| Do nothing                  |
+| (current_document?)         |            +-----------------------------+
++-----------------------------+
+           | Yes
+           v
++-----------------------------+
+| Close the document          |
+| (self.current_document.close())|
++-----------------------------+
+           |
+           v
++-----------------------------+
+| Set current_document to None|
++-----------------------------+
+           |
+           v
++-----------------------------+
+| Print "Document closed"     |
++-----------------------------+
+```
+
+```python
     def close_document(self):
         """Close the current document and free memory."""
         if self.current_document:
@@ -283,6 +532,52 @@ Open the `extracted_text.txt` file that was created. You'll notice:
 ## Step 5: Add Error Handling and Improvements
 
 Let's make our processor more robust. Add this method to your `PDFProcessor` class:
+```
++-----------------------------+
+| get_page_info(page_number)  |
++-----------------------------+
+           |
+           v
++-----------------------------+     Yes     +-----------------------------+
+| Is document loaded?         |------------>| Return error: No document   |
+| (current_document?)         |             | loaded                      |
++-----------------------------+             +-----------------------------+
+           | No
+           v
++-----------------------------+     Yes     +-----------------------------+
+| Is page number valid?       |------------>| Return error: Page doesn't  |
+| (page_number >= len(doc))   |             | exist                       |
++-----------------------------+             +-----------------------------+
+           | No
+           v
++-----------------------------+
+| Try to get page info        |
++-----------------------------+
+           |
+           v
++-----------------------------+
+| Get page dimensions         |
+| (page.rect)                 |
++-----------------------------+
+           |
+           v
++-----------------------------+
+| Count text blocks           |
+| (text_dict["blocks"])       |
++-----------------------------+
+           |
+           v
++-----------------------------+
+| Count images                |
+| (page.get_images())         |
++-----------------------------+
+           |
+           v
++-----------------------------+     Error   +-----------------------------+
+| Return page info dictionary |<-----------+| Catch exception and return  |
++-----------------------------+             | error message               |
+                                            +-----------------------------+
+````
 
 ```python
 def get_page_info(self, page_number: int) -> Dict:
