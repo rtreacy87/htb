@@ -9,6 +9,16 @@ This report documents the completion of the [CTF Name] challenge from [Platform 
 - [Key Skill/Topic 3]
 - [Key Skill/Topic 4]
 
+## Challenge Overview
+
+**Difficulty:** [Easy/Medium/Hard/Insane]
+
+**Tools Used:**
+- [Tool 1] - [Brief description of how it was used]
+- [Tool 2] - [Brief description of how it was used]
+- [Tool 3] - [Brief description of how it was used]
+
+
 ## Task Breakdown
 
 ### Task 1: [Task Title]
@@ -52,6 +62,11 @@ command_to_run --with options
 This command [explain what the command does and why it's relevant].
 
 **Importance:** This task demonstrates [explain why this task is important for the overall CTF and what skills/concepts it teaches].
+
+**Flags to Capture:** [Number of flags]
+- Flag 1: [Detailed explanation of how to capture this flag]
+- Flag 2: [Detailed explanation of how to capture this flag]
+- [Add more as needed]
 
 ## Appendix: Command Outputs
 

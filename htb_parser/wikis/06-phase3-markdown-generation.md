@@ -978,7 +978,7 @@ Now let's create a test that combines all our components. Create `complete_parse
 ```python
 # complete_parser_test.py
 from src.pdf_processor import PDFProcessor
-from src.content_analyzer import ContentAnalyzer
+jrom src.content_analyzer import ContentAnalyzer
 from src.markdown_generator import MarkdownGenerator
 
 def complete_pdf_to_markdown():
