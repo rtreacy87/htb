@@ -10,8 +10,7 @@ def test_content_classification():
     # Test samples representing different content types
     test_samples = [
         "# Reconnaissance",
-        "nmap -sV 10.10.10.1",
-        "The target machine is running SSH on port 22.",
+        "nmap -sV 10.10.10.1", "The target machine is running SSH on port 22.",
         "def exploit_function():",
         "http://10.10.10.1/admin",
         "/etc/passwd",
